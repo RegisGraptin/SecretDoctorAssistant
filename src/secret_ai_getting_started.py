@@ -1,14 +1,13 @@
+import time
+
 import streamlit as st
 from dotenv import load_dotenv
 
-from data.patients import LLM_SUMMARY_TEMPLATE, PATIENTS
+from data.patients import LLM_SUMMARY_TEMPLATE, PATIENT_INFORMATION_TEMPLATE, PATIENTS
+from secret.secret_chat_server import SecretChat
 
 load_dotenv()
 
-
-# https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps
-
-from secret.secret_chat_server import SecretChat
 
 secret_chat = SecretChat()
 
@@ -23,8 +22,8 @@ def generate_summary(data):
     messages = [
         ("human", message),
     ]
-    response = secret_chat.invoke(messages, stream=False)
-    return response.content
+    response = secret_chat.invoke(messages)
+    return response
 
 
 col1, col2 = st.columns([1, 1])
@@ -48,12 +47,13 @@ for patient in PATIENTS.keys():
         disabled=patient == selected_patient,
     ):
         st.session_state.selected_patient = patient
+        st.session_state.messages = []
 
 
 patient_data = PATIENTS[selected_patient]
 
 with col1:
-    st.header("Patient Information")
+    st.header(f"{selected_patient}'s Information")
 
     with st.expander("Basic Information"):
         name = st.text_input(
@@ -195,62 +195,63 @@ with col2:
         st.subheader("Summary")
         st.write(summary)
 
-    st.subheader("Ask the LLM")
-    user_query = st.text_input("Ask a question about the patient")
-    if user_query:
-        # response = llm(user_query)
-        st.write("response")
+    st.subheader("Question on the patient information")
 
+    # Initialize chat history
+    if "messages" not in st.session_state or not st.session_state.messages:
+        patient_data = {key: value for key, value in locals().items()}
+        message = PATIENT_INFORMATION_TEMPLATE.format(**patient_data)
 
-# # Initialize chat history
-# if "messages" not in st.session_state:
-#     st.session_state.messages = [
-#         {
-#             "role": "assistant",
-#             "content": "You are my therapist. Help me with my issues.",
-#         }
-#     ]
+        st.session_state.messages = [
+            {
+                "role": "assistant",
+                "content": f"Here the patient information: \n {message}",
+            },
+            {
+                "role": "assistant",
+                "content": "You are my assistant. I am a doctor, and I need your support in providing the best care for my patients.",
+            },
+        ]
 
-# # Display chat messages from history on app rerun
-# for message in st.session_state.messages:
-#     with st.chat_message(message["role"]):
-#         st.markdown(message["content"])
+    # Create a container for the chat history
+    chat_history_container = st.container()
 
-# # Accept user input
-# if prompt := st.chat_input("What is up?"):
-#     # Add user message to chat history
-#     st.session_state.messages.append({"role": "user", "content": prompt})
-#     # Display user message in chat message container
-#     with st.chat_message("user"):
-#         st.markdown(prompt)
+    # Display chat messages from history on app rerun
+    with chat_history_container:
+        for message in st.session_state.messages[1:]:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-#     # Display assistant response in chat message container
-#     with st.chat_message("assistant"):
-#         assistant_response = secret_chat.invoke(st.session_state.messages)
+    chat_input_container = st.container()
+    with chat_input_container:
+        # Accept user input
+        if prompt := st.chat_input("Question on the patient?"):
+            # Display user message in chat message container
+            with chat_history_container:
+                with st.chat_message("user"):
+                    st.markdown(prompt)
 
-#         # FIXME: loader input?
+                # Display assistant response in chat message container
+                with st.chat_message("assistant"):
+                    # Generate the LLM response
+                    with st.spinner("⏳ Generating response..."):
+                        assistant_response = secret_chat.invoke(
+                            st.session_state.messages
+                        )
 
-#         message_placeholder = st.empty()
-#         # full_response = ""
-#         # assistant_response = random.choice(
-#         #     [
-#         #         "Hello there! How can I assist you today?",
-#         #         "Hi, human! Is there anything I can help you with?",
-#         #         "Do you need help?",
-#         #     ]
-#         # )
-#         # Simulate stream of response with milliseconds delay
+                    message_placeholder = st.empty()
+                    full_response = ""
+                    for chunk in assistant_response.split(" "):
+                        full_response += chunk + " "
+                        time.sleep(0.05)
+                        # Add a blinking cursor to simulate typing
+                        message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(full_response)
 
-#         print(assistant_response)
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": prompt})
 
-#         message_placeholder.markdown(assistant_response)
-#     #     for chunk in assistant_response.split():
-#     #         full_response += chunk + " "
-#     #         time.sleep(0.05)
-#     #         # Add a blinking cursor to simulate typing
-#     #         message_placeholder.markdown(full_response + "▌")
-#     #     message_placeholder.markdown(full_response)
-#     # # Add assistant response to chat history
-#     st.session_state.messages.append(
-#         {"role": "assistant", "content": assistant_response}
-#     )
+            # Add assistant response to chat history
+            st.session_state.messages.append(
+                {"role": "assistant", "content": assistant_response}
+            )

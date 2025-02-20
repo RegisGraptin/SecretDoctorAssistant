@@ -1,3 +1,52 @@
+PATIENT_INFORMATION_TEMPLATE = """
+    - **Basic Information**
+    - Name: {name}
+    - Age: {age}
+    - Gender: {gender}
+    - Date of Birth: {dob}
+    
+    - **Vital Signs**
+    - Heart Rate: {heart_rate} bpm
+    - Blood Pressure: {blood_pressure} mmHg
+    - Respiratory Rate: {respiratory_rate} breaths per min
+    - Temperature: {temperature} °C
+    - Oxygen Saturation: {oxygen_saturation}%
+    
+    - **Medical History**
+    - Past Diagnoses: {past_diagnoses}
+    - Previous Surgeries: {previous_surgeries}
+    - Hospitalizations: {hospitalizations}
+    - Family Medical History: {family_history}
+    - Allergies: {allergies}
+    - Current Medications: {medications}
+    
+    - **Symptoms & Presenting Complaint**
+    - Chief Complaint: {chief_complaint}
+    - Onset and Duration: {onset}
+    - Severity (1-10): {severity}
+    - Associated Symptoms: {associated_symptoms}
+    
+    - **Lifestyle & Risk Factors**
+    - Smoking: {smoking}
+    - Alcohol Use: {alcohol}
+    - Diet: {diet}
+    - Physical Activity: {physical_activity}
+    - Sleep Patterns: {sleep_patterns}
+    - Occupational & Environmental Exposure: {occupational_exposure}
+    
+    - **Examinations & Tests**
+    - Physical Exam Findings: {physical_exam}
+    - Laboratory Tests: {lab_tests}
+    - Imaging Results: {imaging_results}
+    - Additional Tests (ECG, Spirometry, etc.): {additional_tests}
+    
+    - **Psychological & Social History**
+    - Mental Health History: {mental_health}
+    - Stress Levels: {stress_levels}
+    - Support System: {support_system}
+    - Socioeconomic Factors: {socioeconomic_factors}
+"""
+
 LLM_SUMMARY_TEMPLATE = """
     You are an AI assistant helping doctors prepare for auscultation and clinical evaluations.
     Given the following patient details:
