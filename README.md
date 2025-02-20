@@ -2,6 +2,10 @@
 uv venv --python 3.12
 source .venv/bin/activate
 
-uvicorn src.secret.secret_chat_server:app --host 0.0.0.0 --port 8000 --reload
 
+uv pip install 'secret-sdk>=1.8.1' --prerelease=allow
+uv pip install secret-ai-sdk
+uv pip install python-dotenv
+uv pip install streamlit
 
+streamlit run src/main.py
